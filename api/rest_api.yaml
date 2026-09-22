@@ -742,7 +742,7 @@ components:
       type: object
       properties:
         text:
-          maxLength: 10000
+          maxLength: 2000
           minLength: 1
           type: string
           example: Потрясающий вид! Сколько шли до вершины?
