@@ -20,6 +20,74 @@ tags:
   description: Загрузка файлов
 paths:
   /posts:
+    get:
+      tags:
+      - Posts
+      summary: Получить список публикаций
+      description: Возвращает публикации в обратном хронологическом порядке.
+      operationId: listPosts
+      parameters:
+      - name: authorId
+        in: query
+        description: Публикации указанного путешественника
+        required: false
+        schema:
+          type: string
+        example: us_42
+      - name: placeId
+        in: query
+        description: Публикации с привязкой к указанному месту
+        required: false
+        schema:
+          type: string
+        example: pl_9f3a2c
+      - name: cursor
+        in: query
+        description: Курсор из поля `nextCursor` предыдущего ответа
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          maximum: 50
+          minimum: 1
+          type: integer
+          default: 20
+      responses:
+        "200":
+          description: Список публикаций
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostsPage"
+        "401":
+          description: Требуется авторизация
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Некорректный курсор или limit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Слишком много запросов
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+      - bearerAuth: []
     post:
       tags:
       - Posts
@@ -122,7 +190,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
       - bearerAuth: []
-  /users/{userId}/follow:
+  /users/{userId}/subscribers/me:
     put:
       tags:
       - Users
@@ -131,7 +199,7 @@ paths:
         Создает подписку текущего пользователя на указанного.
         Операция идемпотентна: повторный вызов не создает дубликат
         и возвращает тот же результат.
-      operationId: followUser
+      operationId: subscribeToUser
       parameters:
       - name: userId
         in: path
@@ -141,8 +209,12 @@ paths:
           type: string
         example: us_42
       responses:
-        "204":
+        "200":
           description: Подписка создана или уже существовала
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionSummary"
         "400":
           description: Нельзя подписаться на самого себя
           content:
@@ -182,7 +254,7 @@ paths:
       description: |
         Удаляет подписку текущего пользователя на указанного.
         Операция идемпотентна: если подписки не было, ответ тот же.
-      operationId: unfollowUser
+      operationId: unsubscribeFromUser
       parameters:
       - name: userId
         in: path
@@ -192,8 +264,12 @@ paths:
           type: string
         example: us_42
       responses:
-        "204":
+        "200":
           description: Подписка удалена или отсутствовала
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionSummary"
         "401":
           description: Требуется авторизация
           content:
@@ -220,7 +296,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
       - bearerAuth: []
-  /posts/{postId}/like:
+  /posts/{postId}/likes/me:
     put:
       tags:
       - Interactions
@@ -380,14 +456,14 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
       - bearerAuth: []
-  /places/search:
+  /places:
     get:
       tags:
       - Places
-      summary: Найти место по названию
+      summary: Получить список мест
       description: |
         Возвращает места, названия которых соответствуют строке поиска.
-      operationId: searchPlaces
+      operationId: listPlaces
       parameters:
       - name: query
         in: query
@@ -508,142 +584,6 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
       - bearerAuth: []
-  /users/{userId}/posts:
-    get:
-      tags:
-      - Feed
-      summary: Получить ленту публикаций путешественника
-      description: Возвращает публикации указанного пользователя в обратном хронологическом порядке.
-      operationId: getUserPosts
-      parameters:
-      - name: userId
-        in: path
-        description: Идентификатор путешественника
-        required: true
-        schema:
-          type: string
-        example: us_42
-      - name: cursor
-        in: query
-        description: Курсор из поля `nextCursor` предыдущего ответа
-        required: false
-        schema:
-          type: string
-      - name: limit
-        in: query
-        required: false
-        schema:
-          maximum: 50
-          minimum: 1
-          type: integer
-          default: 20
-      responses:
-        "200":
-          description: Лента публикаций
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PostsPage"
-        "401":
-          description: Требуется авторизация
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "404":
-          description: Пользователь не найден
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "422":
-          description: Некорректный курсор или limit
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "429":
-          description: Слишком много запросов
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Ошибка сервера
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-      security:
-      - bearerAuth: []
-  /places/{placeId}/posts:
-    get:
-      tags:
-      - Places
-      summary: "Получить публикации, связанные с указанным местом"
-      description: Возвращает публикации с привязкой к указанному месту в обратном хронологическом порядке.
-      operationId: getPlacePosts
-      parameters:
-      - name: placeId
-        in: path
-        description: Идентификатор места
-        required: true
-        schema:
-          type: string
-        example: pl_9f3a2c
-      - name: cursor
-        in: query
-        description: Курсор из поля `nextCursor` предыдущего ответа
-        required: false
-        schema:
-          type: string
-      - name: limit
-        in: query
-        required: false
-        schema:
-          maximum: 50
-          minimum: 1
-          type: integer
-          default: 20
-      responses:
-        "200":
-          description: Лента публикаций
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PostsPage"
-        "401":
-          description: Требуется авторизация
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "404":
-          description: Место не найден
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "422":
-          description: Некорректный курсор или limit
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "429":
-          description: Слишком много запросов
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Ошибка сервера
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-      security:
-      - bearerAuth: []
 components:
   schemas:
     CreatePostRequest:
@@ -657,7 +597,7 @@ components:
           example: "Закат на Эльбрусе, 4800 м"
         placeId:
           type: string
-          description: Идентификатор места из `GET /places/search`
+          description: Идентификатор места из `GET /places`
           example: pl_9f3a2c
         photoIds:
           maxItems: 10
@@ -680,7 +620,7 @@ components:
       properties:
         id:
           type: string
-          example: ps_01H9Z
+          example: ps_01H9L
         authorId:
           type: string
           example: us_42
@@ -821,7 +761,7 @@ components:
           example: cm_01H9Q
         postId:
           type: string
-          example: ps_01H9Z
+          example: ps_01H9L
         authorId:
           type: string
           example: us_77
@@ -832,6 +772,21 @@ components:
           type: string
           format: date-time
           example: 2026-09-17T13:05:00Z
+    SubscriptionSummary:
+      required:
+      - count
+      - subscribedByMe
+      type: object
+      properties:
+        count:
+          minimum: 0
+          type: integer
+          description: Число подписчиков у указанного путешественника
+          example: 341
+        subscribedByMe:
+          type: boolean
+          description: Подписан ли на него текущий пользователь
+          example: true
     Error:
       required:
       - code
