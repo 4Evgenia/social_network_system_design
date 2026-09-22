@@ -471,7 +471,7 @@ paths:
         required: true
         schema:
           maxLength: 100
-          minLength: 1
+          minLength: 3
           type: string
         example: Эльбрус
       - name: limit
@@ -592,7 +592,7 @@ components:
       type: object
       properties:
         description:
-          maxLength: 2000
+          maxLength: 10000
           type: string
           example: "Закат на Эльбрусе, 4800 м"
         placeId:
@@ -681,19 +681,18 @@ components:
           format: double
           example: 42.4453
     PlacesPage:
-      required:
-      - items
-      - total
       type: object
+      required: [items, hasMore]
       properties:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/Place"
-        total:
-          type: integer
-          description: Общее число найденных мест
-          example: 3
+            $ref: '#/components/schemas/Place'
+        hasMore:
+          type: boolean
+          description: |
+            Есть ли результаты за пределами текущей страницы.
+          example: true
     Photo:
       required:
       - id
@@ -743,7 +742,7 @@ components:
       type: object
       properties:
         text:
-          maxLength: 1000
+          maxLength: 10000
           minLength: 1
           type: string
           example: Потрясающий вид! Сколько шли до вершины?
