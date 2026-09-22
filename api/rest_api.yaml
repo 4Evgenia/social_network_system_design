@@ -706,12 +706,6 @@ components:
           type: string
           format: uri
           example: https://cdn.travelblog.example/ph_01H8X.jpg
-        width:
-          type: integer
-          example: 1920
-        height:
-          type: integer
-          example: 1080
     LikeSummary:
       required:
       - count
