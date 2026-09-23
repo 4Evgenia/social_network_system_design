@@ -396,6 +396,67 @@ paths:
       security:
       - bearerAuth: []
   /posts/{postId}/comments:
+    get:
+      tags:
+      - Interactions
+      summary: Получить комментарии публикации
+      description: Возвращает комментарии в обратном хронологическом порядке.
+      operationId: listPostComments
+      parameters:
+      - name: postId
+        in: path
+        description: Идентификатор публикации
+        required: true
+        schema:
+          type: string
+        example: ps_01H9L
+      - name: cursor
+        in: query
+        description: Курсор из поля `nextCursor` предыдущего ответа
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          maximum: 50
+          minimum: 1
+          type: integer
+          default: 10
+      responses:
+        "200":
+          description: Список комментариев
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentsPage"
+        "401":
+          description: Требуется авторизация
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Публикация не найдена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Слишком много запросов
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+      - bearerAuth: []
     post:
       tags:
       - Interactions
@@ -681,13 +742,15 @@ components:
           format: double
           example: 42.4453
     PlacesPage:
+      required:
+      - hasMore
+      - items
       type: object
-      required: [items, hasMore]
       properties:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/Place'
+            $ref: "#/components/schemas/Place"
         hasMore:
           type: boolean
           description: |
@@ -765,6 +828,20 @@ components:
           type: string
           format: date-time
           example: 2026-09-17T13:05:00Z
+    CommentsPage:
+      required:
+      - items
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+        nextCursor:
+          type: string
+          description: "Курсор для следующей страницы; null, если страниц больше нет"
+          nullable: true
+          example: eyJ0IjoiMjAyNi0wOS0xN1QxMzowNTowMFoifQ
     SubscriptionSummary:
       required:
       - count
