@@ -27,7 +27,7 @@ Table countries {
 Table places {
   id uuid [pk, default: `uuidv7()`]
   country_code char(2) [not null, ref: > countries.code]
-  name varchar(200) [not null]
+  name varchar(200)
   latitude float8 [not null]
   longitude float8 [not null]
   created_at   timestamptz [not null, default: `now()`]
